@@ -539,6 +539,28 @@ ccnl_content_remove(struct ccnl_relay_s *ccnl, struct ccnl_content_s *c)
     return c2;
 }
 
+static void
+ccnl_content_cache_out(struct ccnl_relay_s *ccnl)
+{
+    if (ccnl->max_cache_entries > 0 &&
+        ccnl->contentcnt >= ccnl->max_cache_entries) { // remove oldest content
+        struct ccnl_content_s *c, *oldest = NULL;
+        uint32_t age = 0;
+        for (c = ccnl->contents; c; c = c->next) {
+            if (!(c->flags & CCNL_CONTENT_FLAGS_STATIC)) {
+                if ((age == 0) || c->last_used < age) {
+                    age = c->last_used;
+                    oldest = c;
+                }
+            }
+        }
+        if (oldest) {
+            DEBUGMSG_CORE(DEBUG, " remove old entry from cache\n");
+            ccnl_content_remove(ccnl, oldest);
+        }
+    }
+}
+
 struct ccnl_content_s*
 ccnl_content_add2cache(struct ccnl_relay_s *ccnl, struct ccnl_content_s *c)
 {
@@ -556,24 +578,7 @@ ccnl_content_add2cache(struct ccnl_relay_s *ccnl, struct ccnl_content_s *c)
             return NULL;
         }
     }
-
-    if (ccnl->max_cache_entries > 0 &&
-        ccnl->contentcnt >= ccnl->max_cache_entries) { // remove oldest content
-        struct ccnl_content_s *c2, *oldest = NULL;
-        uint32_t age = 0;
-        for (c2 = ccnl->contents; c2; c2 = c2->next) {
-             if (!(c2->flags & CCNL_CONTENT_FLAGS_STATIC)) {
-                 if ((age == 0) || c2->last_used < age) {
-                     age = c2->last_used;
-                     oldest = c2;
-                 }
-             }
-         }
-         if (oldest) {
-             DEBUGMSG_CORE(DEBUG, " remove old entry from cache\n");
-             ccnl_content_remove(ccnl, oldest);
-         }
-    }
+    ccnl_content_cache_out(ccnl);
     if ((ccnl->max_cache_entries <= 0) ||
          (ccnl->contentcnt <= ccnl->max_cache_entries)) {
             DBL_LINKED_LIST_ADD(ccnl->contents, c);
@@ -586,6 +591,22 @@ ccnl_content_add2cache(struct ccnl_relay_s *ccnl, struct ccnl_content_s *c)
 #endif
     }
 
+    return c;
+}
+
+struct ccnl_content_s*
+ccnl_content_add2cache_tentative(struct ccnl_relay_s *ccnl,
+                                 struct ccnl_content_s *c,
+                                 size_t size)
+{
+    if (!c) {
+        c = (struct ccnl_content_s *) ccnl_calloc(1, sizeof(struct ccnl_content_s));
+        if (!c)
+            return NULL;
+    }
+    /* c->pkt = */;
+    c->last_used = CCNL_NOW();
+    c->flags = CCNL_CONTENT_FLAGS_NOT_STALE | CCNL_CONTENT_FLAGS_TENTATIVE;
     return c;
 }
 
