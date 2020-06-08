@@ -38,10 +38,11 @@ struct ccnl_prefix_s;
  * static or stale.
  */
 typedef enum ccnl_content_flags_e {
-    CCNL_CONTENT_FLAGS_NOT_STALE = 0x0, /**< content is not stale */
-    CCNL_CONTENT_FLAGS_STATIC = 0x01,   /**< content is static */
-    CCNL_CONTENT_FLAGS_STALE = 0x02,    /**< content is stale */
-    CCNL_CONTENT_DO_NOT_USE = UINT8_MAX /**< for internal use only, sets the width of the enum to sizeof(uint8_t) */
+    CCNL_CONTENT_FLAGS_NOT_STALE = 0x0,     /**< content is not stale */
+    CCNL_CONTENT_FLAGS_STATIC = 0x01,       /**< content is static */
+    CCNL_CONTENT_FLAGS_STALE = 0x02,        /**< content is stale */
+    CCNL_CONTENT_FLAGS_TENTATIVE = 0x04,    /**< content is tentative */
+    CCNL_CONTENT_DO_NOT_USE = UINT8_MAX     /**< for internal use only, sets the width of the enum to sizeof(uint8_t) */
 } ccnl_content_flags;
 
 /**
